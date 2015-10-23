@@ -11,8 +11,9 @@ class IndexView(generic.ListView):
 
     def get_queryset(self):
         return Question.objects.filter(
-            pub_date__lte=timezone.now()
-        ).order_by('-pub_date')[:5]
+            pub_date__lte=timezone.now(),
+            choice__isnull=False
+        ).order_by('-pub_date').distinct()[:5]
 
 class DetailView(generic.DetailView):
     model = Question
@@ -29,7 +30,7 @@ class ResultsView(generic.DetailView):
 def vote(request, question_id):
     p = get_object_or_404(Question, pk=question_id)
     try:
-        selected_choice = p.choice_set.get(pk=request.POST['choice'])
+        selected_choice = p.choices.get(pk=request.POST['choice'])
     except (KeyError, Choice.DoesNotExist):
         return render(request, 'polls/detail.html', {
             'question': p,
